@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>T-CAN — live CAN-bus data from your Tesla</title>
+<meta name="description" content="Battery cells, pack health, motors, charging and HV state — live on your phone through an OBD-II adapter. Works offline, no account, no data collection.">
+<meta name="theme-color" content="#06080c">
+<meta property="og:type" content="website">
+<meta property="og:title" content="T-CAN — live CAN-bus data from your Tesla">
+<meta property="og:description" content="Battery cells, pack health, motors, charging and HV state — live on your phone through an OBD-II adapter.">
+<meta property="og:image" content="https://taraspeterchuk.github.io/tcan-site/assets/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="assets/img/icon-192.png">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #06080c;
+    --bg-2: #0b0f15;
+    --surface: rgba(22, 27, 34, 0.72);
+    --surface-solid: #12171e;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.14);
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --dim: #6e7781;
+    --green: #3fb950;
+    --blue: #58a6ff;
+    --amber: #d29922;
+    --red: #f85149;
+    --brand: #e5202e;
+    --photo-bg: #ffffff;
+    --radius: 18px;
+    --shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  /* Фонові «сяйва» + сітка шини — за всім вмістом */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background:
+      radial-gradient(900px 600px at 12% -10%, rgba(229, 32, 46, 0.18), transparent 60%),
+      radial-gradient(800px 600px at 95% 5%, rgba(88, 166, 255, 0.14), transparent 60%),
+      radial-gradient(900px 700px at 50% 110%, rgba(63, 185, 80, 0.08), transparent 60%),
+      var(--bg);
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 70%);
+    opacity: 0.5;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  img { max-width: 100%; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-left)); }
+
+  /* Мова: без JS — англійська; JS ставить html[data-lang] (не клас — .uk сховав би сам <html>).
+     Ховаємо з !important, щоб жодне правило з власним display (картинки, кнопки) не показало чужу мову. */
+  html:not([data-lang='uk']) .uk { display: none !important; }
+  html[data-lang='uk'] .en { display: none !important; }
+
+  /* ---------- Шапка ---------- */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: saturate(160%) blur(16px);
+    -webkit-backdrop-filter: saturate(160%) blur(16px);
+    background: rgba(6, 8, 12, 0.66);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav .wrap { display: flex; align-items: center; gap: 20px; height: 64px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); font-weight: 800; font-size: 19px; letter-spacing: -0.01em; }
+  .brand:hover { text-decoration: none; }
+  .brand svg { width: 30px; height: 30px; }
+  .links { display: flex; gap: 22px; margin-left: auto; font-size: 14px; }
+  .links a { color: var(--muted); }
+  .links a:hover { color: var(--text); text-decoration: none; }
+  .lang { display: inline-flex; padding: 3px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); }
+  .lang button {
+    font: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 5px 11px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer;
+  }
+  .lang button[aria-pressed='true'] { background: var(--text); color: var(--bg); }
+  @media (max-width: 760px) { .links { display: none; } .lang { margin-left: auto; } }
+
+  /* ---------- Герой ---------- */
+  .hero { padding: 72px 0 40px; }
+  .hero .hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: center; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface);
+    font-size: 13px; color: var(--muted);
+  }
+  .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px var(--green); animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.35; } }
+  h1 {
+    font-size: clamp(38px, 5.6vw, 66px);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    font-weight: 800;
+    margin: 18px 0 18px;
+  }
+  .grad {
+    background: linear-gradient(100deg, #fff 10%, #ffd2d5 45%, var(--brand) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub { font-size: clamp(17px, 1.6vw, 19px); color: var(--muted); max-width: 560px; margin: 0 0 28px; }
+  /* Магазини: групи Android / iPhone, офіційні значки однакової висоти, підпис під кожним */
+  .stores { display: flex; flex-wrap: wrap; gap: 12px; }
+  .store-group {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 12px 14px 10px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface);
+  }
+  .group-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+  .badges { display: flex; flex-wrap: wrap; gap: 10px; }
+  .badge { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; font-weight: 600; transition: transform 0.15s ease; }
+  .badge:hover { text-decoration: none; color: var(--text); transform: translateY(-2px); }
+  .badge img { display: block; height: 44px; width: auto; }
+  .trust { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 24px; font-size: 13px; color: var(--dim); }
+  .trust > span::before { content: '✓'; color: var(--green); margin-right: 6px; font-weight: 700; }
+
+  .phones { position: relative; height: 560px; }
+  .phone {
+    position: absolute; top: 50%; left: 50%;
+    width: 236px; aspect-ratio: 540 / 960; padding: 7px;
+    border-radius: 34px; background: linear-gradient(160deg, #2a313c, #0c1016 40%);
+    border: 1px solid var(--line-strong); box-shadow: var(--shadow);
+  }
+  .phone img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 28px; }
+  .phone.c { transform: translate(-50%, -50%); z-index: 3; }
+  .phone.l { transform: translate(-112%, -44%) rotate(-9deg) scale(0.86); z-index: 2; opacity: 0.85; }
+  .phone.r { transform: translate(12%, -44%) rotate(9deg) scale(0.86); z-index: 1; opacity: 0.85; }
+  .glow { position: absolute; inset: 15% 20%; background: radial-gradient(circle, rgba(229, 32, 46, 0.35), transparent 65%); filter: blur(40px); z-index: 0; }
+  @media (max-width: 920px) {
+    .hero { padding-top: 44px; }
+    .hero .hero-grid { grid-template-columns: 1fr; }
+    .phones { height: 470px; overflow: hidden; margin: 0 -16px; }
+    .phone { width: 200px; }
+  }
+  @media (max-width: 420px) {
+    .phones { height: 400px; }
+    .phone { width: 168px; }
+  }
+
+  /* ---------- Цифри ---------- */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin: 24px 0 0; }
+  .stat { background: var(--surface-solid); padding: 22px 20px; }
+  .stat b { display: block; font-size: 32px; letter-spacing: -0.03em; line-height: 1.1; }
+  .stat span { color: var(--muted); font-size: 14px; }
+  @media (max-width: 760px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ---------- Секції ---------- */
+  section.block { padding: 88px 0 0; }
+  .kicker { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand); }
+  h2 { font-size: clamp(28px, 3.6vw, 42px); line-height: 1.12; letter-spacing: -0.03em; margin: 8px 0 12px; }
+  .lead { color: var(--muted); max-width: 680px; margin: 0 0 32px; font-size: 17px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+
+  .features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .feature { padding: 22px; transition: border-color 0.2s ease, transform 0.2s ease; }
+  .feature:hover { border-color: var(--line-strong); transform: translateY(-3px); }
+  .ic {
+    width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 14px;
+    background: rgba(88, 166, 255, 0.12); color: var(--blue);
+  }
+  .ic svg { width: 22px; height: 22px; }
+  .ic.g { background: rgba(63, 185, 80, 0.12); color: var(--green); }
+  .ic.r { background: rgba(229, 32, 46, 0.14); color: #ff6b74; }
+  .ic.a { background: rgba(210, 153, 34, 0.14); color: var(--amber); }
+  .feature h3 { font-size: 17px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .feature p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  @media (max-width: 980px) { .features { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .features { grid-template-columns: 1fr; } }
+
+  /* Галерея скриншотів */
+  .gallery-wrap { position: relative; margin-top: 34px; }
+  .gallery { display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 8px 2px 18px; scrollbar-width: thin; }
+  /* Затухання з того боку, куди ще можна гортати (класи ставить JS) */
+  .gallery-wrap.fade-r .gallery { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent); }
+  .gallery-wrap.fade-l .gallery { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent); }
+  .gallery-wrap.fade-l.fade-r .gallery { -webkit-mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent); }
+  .gallery img { -webkit-user-drag: none; user-select: none; }
+  /* Миша: тягни, як на телефоні; під час перетягування snap вимкнено, після — плавно до найближчого */
+  @media (hover: hover) and (pointer: fine) {
+    .gallery { cursor: grab; }
+    .gallery.dragging { cursor: grabbing; scroll-snap-type: none; user-select: none; }
+  }
+  .gal-btn {
+    position: absolute; top: calc(50% - 34px); z-index: 2;
+    width: 44px; height: 44px; border-radius: 50%; display: none; place-items: center;
+    border: 1px solid var(--line-strong); background: rgba(18, 23, 30, 0.88); color: var(--text); cursor: pointer;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  .gal-btn svg { width: 22px; height: 22px; }
+  .gal-btn.prev { left: 4px; }
+  .gal-btn.next { right: 4px; }
+  .gal-btn:hover:not(:disabled) { transform: scale(1.06); }
+  .gal-btn:disabled { opacity: 0; pointer-events: none; }
+  @media (hover: hover) and (pointer: fine) { .gal-btn { display: grid; } }
+  .gallery figure { margin: 0; flex: none; width: clamp(170px, 17vw, 206px); scroll-snap-align: start; }
+  .gallery .phone { position: static; transform: none; width: 100%; opacity: 1; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45); }
+  .gallery figcaption { text-align: center; color: var(--muted); font-size: 14px; margin-top: 10px; }
+
+  /* Редакції */
+  .editions { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .edition { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .edition.full { border-color: rgba(229, 32, 46, 0.4); background: linear-gradient(160deg, rgba(229, 32, 46, 0.12), var(--surface) 55%); }
+  .edition h3 { margin: 0; font-size: 24px; letter-spacing: -0.02em; }
+  .edition .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .edition ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; color: var(--muted); }
+  .edition li::before { content: '✓'; color: var(--green); font-weight: 700; margin-right: 8px; }
+  .edition .badges { margin-top: auto; }
+  @media (max-width: 760px) { .editions { grid-template-columns: 1fr; } }
+
+  /* Адаптери */
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  @media (max-width: 1040px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+  /* Телефон: фото адаптерів нижчі (товар цілий), кабелі лишаються квадратними — текст на фото має читатись */
+  @media (max-width: 520px) { .grid:not(.cables) .photo img { aspect-ratio: 16 / 10; } }
+  .product { overflow: hidden; display: flex; flex-direction: column; }
+  .photo { background: var(--photo-bg); display: block; }
+  .photo img { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; }
+  .product .body { padding: 18px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .product h3 { margin: 0; font-size: 18px; letter-spacing: -0.01em; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 11.5px; font-weight: 700; letter-spacing: 0.03em; padding: 3px 8px; border-radius: 7px; border: 1px solid var(--line-strong); color: var(--muted); }
+  .chip.stn { color: var(--green); border-color: rgba(63, 185, 80, 0.45); }
+  .status { margin: 0; display: grid; gap: 7px; font-size: 14px; }
+  .status div { display: grid; grid-template-columns: 78px 1fr; gap: 10px; }
+  .status dt { color: var(--dim); }
+  .status dd { margin: 0; }
+  .ok { color: var(--green); }
+  .soon { color: var(--blue); }
+  .maybe { color: var(--amber); }
+  .no { color: var(--red); }
+  .note { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .more { margin: 18px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .more li { padding: 14px 18px; font-size: 14.5px; color: var(--muted); }
+  .more b { color: var(--text); }
+  @media (max-width: 760px) { .more { grid-template-columns: 1fr; } }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--dim); margin: -14px 0 22px; }
+
+  /* Таймер розгону */
+  .accel { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; }
+  .accel .card { padding: 26px; }
+  .accel h3 { margin: 0 0 10px; font-size: 19px; }
+  .accel p { margin: 0 0 12px; color: var(--muted); }
+  .accel ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .accel li { display: flex; gap: 10px; color: var(--muted); }
+  .accel li b { color: var(--text); }
+  .accel .yes::before, .accel .nope::before { flex: none; font-weight: 800; }
+  .accel .yes::before { content: '✓'; color: var(--green); }
+  .accel .nope::before { content: '✕'; color: var(--red); }
+  .accel .sub-h { margin-top: 22px; }
+  /* Знімки віджета (у демо з реального компонента апки) */
+  .shot { margin: 0 0 16px; }
+  .shot:last-child { margin-bottom: 0; }
+  .shot img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); }
+  /* Де живе віджет: телефон з підсвіченими віджетом і чипом STN + крупні кадри станів */
+  .accel-media { display: grid; grid-template-columns: 210px 1fr; gap: 20px; align-items: start; }
+  .where { margin: 0; }
+  .where .phone { position: static; transform: none; width: 100%; opacity: 1; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45); }
+  .where figcaption { margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+  @media (max-width: 1040px) and (min-width: 861px) { .accel-media { grid-template-columns: 1fr; } .where { max-width: 230px; } }
+  @media (max-width: 520px) { .accel-media { grid-template-columns: 1fr; } .where { max-width: 240px; margin: 0 auto; } }
+  .shot figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); }
+  @media (max-width: 860px) { .accel { grid-template-columns: 1fr; } }
+
+  /* Кабелі */
+  .cables { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 860px) { .cables { grid-template-columns: 1fr; max-width: 440px; } }
+  .pins { font-size: 34px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+  .pins small { font-size: 15px; color: var(--muted); font-weight: 700; margin-left: 4px; }
+
+  /* Перегляд фото поверх сторінки (кабелі): закривається тапом, ✕, Esc або «назад» */
+  a.zoom { cursor: zoom-in; }
+  .lightbox {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    background: rgba(3, 5, 8, 0.86); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    opacity: 0; transition: opacity 0.2s ease; cursor: zoom-out;
+  }
+  .lightbox[hidden] { display: none; }
+  .lightbox.open { opacity: 1; }
+  .lightbox img {
+    max-width: min(100%, 960px); max-height: 100%; border-radius: 14px;
+    background: var(--photo-bg); box-shadow: var(--shadow);
+    transform: scale(0.96); transition: transform 0.2s ease;
+  }
+  .lightbox.open img { transform: none; }
+  .lb-close {
+    position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px;
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid var(--line-strong); background: var(--surface-solid); color: var(--text);
+    font: inherit; font-size: 16px; cursor: pointer;
+  }
+  html.lb-lock { overflow: hidden; }
+  @media (prefers-reduced-motion: reduce) { .lightbox, .lightbox img { transition: none; } }
+
+  /* Приватність */
+  .privacy { margin-top: 88px; padding: 46px; text-align: center; background: linear-gradient(160deg, rgba(63, 185, 80, 0.12), var(--surface) 60%); border-color: rgba(63, 185, 80, 0.3); }
+  .privacy h2 { margin-top: 0; }
+  .privacy p { color: var(--muted); max-width: 620px; margin: 0 auto 6px; }
+  @media (max-width: 520px) { .privacy { padding: 30px 20px; } }
+
+  /* Підтримка + футер */
+  .support { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; padding: 28px; }
+  .support p { margin: 6px 0 0; color: var(--muted); max-width: 640px; }
+  .contact { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+  .mail { font-size: 18px; font-weight: 700; }
+  .tg {
+    display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px;
+    background: #229ed9; color: #fff; font-weight: 600; font-size: 14.5px;
+    transition: transform 0.15s ease, filter 0.15s ease;
+  }
+  .tg:hover { text-decoration: none; transform: translateY(-2px); filter: brightness(1.08); }
+  .tg svg { width: 18px; height: 18px; }
+  .social { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+  .social a {
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px; border-radius: 999px;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); font-size: 13.5px; font-weight: 600;
+  }
+  .social a:hover { text-decoration: none; color: var(--text); border-color: rgba(255, 255, 255, 0.28); }
+  .social svg { width: 17px; height: 17px; }
+  footer { margin-top: 72px; padding: 28px 0 calc(36px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); color: var(--dim); font-size: 13px; }
+  footer .row { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 10px; }
+  footer p { margin: 6px 0; max-width: 860px; }
+
+  /* Поява при прокрутці (лише з JS і без reduced-motion) */
+  html.js .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  html.js .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    html.js .reveal { opacity: 1; transform: none; transition: none; }
+    .eyebrow .dot { animation: none; }
+    .badge, .feature { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="T-CAN">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M8 9.6 Q8 8.8 9 8.8 L22.5 8.8 L22.5 13.7 L10.4 13.7 Q9.6 13.7 9.6 13.0 Z" fill="var(--brand)" />
+        <path d="M25.5 8.8 L39 8.8 Q40 8.8 40 9.6 L38.4 13.0 Q38.4 13.7 37.6 13.7 L25.5 13.7 Z" fill="var(--brand)" />
+        <path d="M27 16 L18 29 H23 L21 40.5 L30 26.5 H25 L27 16 Z" fill="var(--brand)" />
+      </svg>
+      T-CAN
+    </a>
+    <nav class="links">
+      <a href="#features"><span class="en">Features</span><span class="uk">Можливості</span></a>
+      <a href="#editions"><span class="en">Editions</span><span class="uk">Версії</span></a>
+      <a href="#adapters"><span class="en">Adapters</span><span class="uk">Адаптери</span></a>
+      <a href="#cables"><span class="en">Cables</span><span class="uk">Кабелі</span></a>
+      <a href="#support"><span class="en">Support</span><span class="uk">Підтримка</span></a>
+    </nav>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang="uk" aria-pressed="false">УКР</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ======== Герой ======== -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span><span class="en">For Model 3 / Y and Model S / X</span><span class="uk">Для Model 3 / Y та Model S / X</span></span>
+        <h1>
+          <span class="en">See what your Tesla's <span class="grad">CAN bus</span> is saying.</span>
+          <span class="uk">Що каже <span class="grad">CAN‑шина</span> вашої Tesla — наживо.</span>
+        </h1>
+        <p class="sub">
+          <span class="en">Battery cells, pack health, motors, charging and HV state — live on your phone through an inexpensive OBD-II adapter. No account, no cloud.</span>
+          <span class="uk">Комірки батареї, стан пака, мотори, зарядка й HV — наживо на телефоні через недорогий OBD-II адаптер. Без акаунта й без хмари.</span>
+        </p>
+        <!-- Офіційні значки магазинів (Google Play / Apple) — без змін, лише обрізані прозорі поля -->
+        <div class="stores">
+          <div class="store-group">
+            <span class="group-label">Android</span>
+            <div class="badges">
+              <a class="badge" href="https://play.google.com/store/apps/details?id=app.tcan">
+                <img src="assets/img/badges/google-play.png" alt="Get it on Google Play" width="562" height="166">
+                <span>T-CAN</span>
+              </a>
+              <a class="badge" href="https://play.google.com/store/apps/details?id=app.tcan.lite">
+                <img src="assets/img/badges/google-play.png" alt="Get it on Google Play" width="562" height="166">
+                <span><span class="en">T-CAN Lite · free</span><span class="uk">T-CAN Lite · безкоштовно</span></span>
+              </a>
+            </div>
+          </div>
+          <div class="store-group">
+            <span class="group-label">iPhone</span>
+            <div class="badges">
+              <a class="badge" href="https://apps.apple.com/app/id6827252478">
+                <img src="assets/img/badges/app-store.svg" alt="Download on the App Store" width="120" height="40">
+                <span>T-CAN</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="trust">
+          <span><span class="en">Works offline</span><span class="uk">Працює офлайн</span></span>
+          <span><span class="en">No account</span><span class="uk">Без акаунта</span></span>
+          <span><span class="en">Collects no data</span><span class="uk">Не збирає даних</span></span>
+        </div>
+      </div>
+      <div class="phones" aria-hidden="true">
+        <div class="glow"></div>
+        <div class="phone l"><img src="assets/img/shots/drive-accel.webp" alt="" width="540" height="960"></div>
+        <div class="phone c"><img src="assets/img/shots/cells.webp" alt="" width="540" height="960"></div>
+        <div class="phone r"><img src="assets/img/shots/pack.webp" alt="" width="540" height="960"></div>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="stats reveal">
+        <div class="stat"><b>2,700+</b><span class="en">decoded signals</span><span class="uk">декодованих сигналів</span></div>
+        <div class="stat"><b>5</b><span class="en">ready-made dashboards</span><span class="uk">готових дашбордів</span></div>
+        <div class="stat"><b>4</b><span class="en">ways to connect</span><span class="uk">способи підключення</span></div>
+        <div class="stat"><b>0</b><span class="en">bytes sent anywhere</span><span class="uk">байтів назовні</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== Можливості ======== -->
+  <section class="block" id="features">
+    <div class="wrap">
+      <div class="kicker"><span class="en">Features</span><span class="uk">Можливості</span></div>
+      <h2><span class="en">What the car itself sees</span><span class="uk">Те, що бачить сама машина</span></h2>
+      <p class="lead">
+        <span class="en">Key readings are cross-checked against the car's own diagnostic values on real Model 3 / Y. Tiles marked ⓘ tell you exactly which signal they show.</span>
+        <span class="uk">Ключові показники звірені з діагностичними значеннями самого авто на реальних Model 3 / Y. Плитки з ⓘ показують, який саме сигнал за ними стоїть.</span>
+      </p>
+      <div class="features">
+        <article class="card feature reveal">
+          <div class="ic g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 10.5v3M7 10v4M11 10v4M15 10v4"/></svg></div>
+          <h3><span class="en">Cells</span><span class="uk">Комірки</span></h3>
+          <p><span class="en">Every brick voltage, min / max, imbalance and dead-cell detection.</span><span class="uk">Напруга кожного блока, мін / макс, розбаланс і виявлення мертвих комірок.</span></p>
+        </article>
+        <article class="card feature reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div>
+          <h3><span class="en">Battery pack</span><span class="uk">Батарея</span></h3>
+          <p><span class="en">Voltage, current, state of charge, health (SOH), nominal and remaining energy.</span><span class="uk">Напруга, струм, рівень заряду, стан (SOH), номінальна й залишкова енергія.</span></p>
+        </article>
+        <article class="card feature reveal">
+          <div class="ic r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 16a8 8 0 1 1 16 0"/><path d="m12 16 4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg></div>
+          <h3><span class="en">Drive + 0–100 timer</span><span class="uk">Привід + розгін 0–100</span></h3>
+          <p><span class="en">Speed, power and torque per motor, pedal, gear, drive-unit temperatures and an acceleration timer.</span><span class="uk">Швидкість, потужність і момент по моторах, педаль, передача, температури приводу й таймер розгону.</span></p>
+        </article>
+        <article class="card feature reveal">
+          <div class="ic a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v5M17 4v5M5 9h14v3a7 7 0 0 1-14 0zM12 19v3"/></svg></div>
+          <h3><span class="en">Charging</span><span class="uk">Зарядка</span></h3>
+          <p><span class="en">Line power and voltage, charger and charge-port state, charge limit.</span><span class="uk">Потужність і напруга лінії, стан зарядного й порту, ліміт заряду.</span></p>
+        </article>
+        <article class="card feature reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 12h4l2-5 4 10 2-5h4"/></svg></div>
+          <h3>HV</h3>
+          <p><span class="en">Contactor and BMS states, HV bus and pack voltages.</span><span class="uk">Стан контакторів і BMS, напруги HV-шини та пака.</span></p>
+        </article>
+        <article class="card feature reveal">
+          <div class="ic g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15V9h4v6h4V9h4v6h4V9h2"/></svg></div>
+          <h3><span class="en">Raw frames</span><span class="uk">Сирі кадри</span></h3>
+          <p><span class="en">Live frame rate and per-ID filters; Raw bus mode works with any CAN car.</span><span class="uk">Частота наживо й фільтри по ID; режим «сира шина» — для будь-якого CAN-авто.</span></p>
+        </article>
+        <article class="card feature reveal">
+          <div class="ic r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></div>
+          <h3><span class="en">CAN logger</span><span class="uk">CAN-логер</span></h3>
+          <p><span class="en">Record the bus and export to CSV for your own analysis.</span><span class="uk">Запис шини й експорт у CSV для власного аналізу.</span></p>
+        </article>
+        <article class="card feature reveal">
+          <div class="ic a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+          <h3><span class="en">Snapshots</span><span class="uk">Знімки</span></h3>
+          <p><span class="en">Save or share any dashboard as PNG or PDF, with date, car and VIN.</span><span class="uk">Збережіть чи поширте дашборд у PNG або PDF — з датою, авто й VIN.</span></p>
+        </article>
+      </div>
+
+      <div class="gallery-wrap reveal">
+        <div class="gallery" tabindex="0" aria-label="Screenshots">
+          <figure><div class="phone"><img src="assets/img/shots/snapshot-cells.webp" alt="" width="540" height="960" loading="lazy" draggable="false"></div><figcaption><span class="en">Snapshot · dead cell</span><span class="uk">Знімок · мертва комірка</span></figcaption></figure>
+          <figure><div class="phone"><img src="assets/img/shots/cells.webp" alt="" width="540" height="960" loading="lazy" draggable="false"></div><figcaption><span class="en">Cells</span><span class="uk">Комірки</span></figcaption></figure>
+          <figure><div class="phone"><img src="assets/img/shots/pack.webp" alt="" width="540" height="960" loading="lazy" draggable="false"></div><figcaption><span class="en">Pack</span><span class="uk">Пак</span></figcaption></figure>
+          <figure><div class="phone"><img src="assets/img/shots/drive-accel.webp" alt="" width="540" height="960" loading="lazy" draggable="false"></div><figcaption><span class="en">Drive</span><span class="uk">Привід</span></figcaption></figure>
+          <figure><div class="phone"><img src="assets/img/shots/hv.webp" alt="" width="540" height="960" loading="lazy" draggable="false"></div><figcaption>HV</figcaption></figure>
+          <figure><div class="phone"><img src="assets/img/shots/overview.webp" alt="" width="540" height="960" loading="lazy" draggable="false"></div><figcaption><span class="en">Decoded values</span><span class="uk">Декодовані значення</span></figcaption></figure>
+        </div>
+        <button type="button" class="gal-btn prev" aria-label="Previous screenshots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6"/></svg></button>
+        <button type="button" class="gal-btn next" aria-label="Next screenshots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== Редакції ======== -->
+  <section class="block" id="editions">
+    <div class="wrap">
+      <div class="kicker"><span class="en">Editions</span><span class="uk">Версії</span></div>
+      <h2><span class="en">Try free, then go full</span><span class="uk">Спробуйте безкоштовно, далі — повна</span></h2>
+      <p class="lead"><span class="en">Not sure your adapter works? Start with T-CAN Lite: it checks the connection and shows a few live readings.</span><span class="uk">Не впевнені, що адаптер підійде? Почніть з T-CAN Lite: він перевіряє зʼєднання й показує кілька параметрів наживо.</span></p>
+      <div class="editions">
+        <article class="card edition full reveal">
+          <span class="tag"><span class="en">Full version</span><span class="uk">Повна версія</span></span>
+          <h3>T-CAN</h3>
+          <ul>
+            <li><span class="en">All dashboards: cells, pack, drive, charging, HV</span><span class="uk">Усі дашборди: комірки, пак, привід, зарядка, HV</span></li>
+            <li><span class="en">2,700+ decoded signals, favourites and filters</span><span class="uk">2 700+ декодованих сигналів, обране й фільтри</span></li>
+            <li><span class="en">Acceleration timer with run history</span><span class="uk">Таймер розгону з історією заїздів</span></li>
+            <li><span class="en">CAN logger, raw frames, PNG / PDF snapshots</span><span class="uk">CAN-логер, сирі кадри, знімки PNG / PDF</span></li>
+          </ul>
+          <div class="badges">
+            <a class="badge" href="https://play.google.com/store/apps/details?id=app.tcan"><img src="assets/img/badges/google-play.png" alt="Get it on Google Play" width="562" height="166"></a>
+            <a class="badge" href="https://apps.apple.com/app/id6827252478"><img src="assets/img/badges/app-store.svg" alt="Download on the App Store" width="120" height="40"></a>
+          </div>
+        </article>
+        <article class="card edition reveal">
+          <span class="tag"><span class="en">Free</span><span class="uk">Безкоштовно</span></span>
+          <h3>T-CAN Lite</h3>
+          <ul>
+            <li><span class="en">Adapter status, protocol and frame rate</span><span class="uk">Стан адаптера, протокол і частота кадрів</span></li>
+            <li><span class="en">Live basics: state of charge, pack voltage and current, speed</span><span class="uk">Базове наживо: рівень заряду, напруга й струм пака, швидкість</span></li>
+            <li><span class="en">Two live signals from each dashboard (except cells)</span><span class="uk">По два живі сигнали з кожного дашборда (крім комірок)</span></li>
+          </ul>
+          <div class="badges">
+            <a class="badge" href="https://play.google.com/store/apps/details?id=app.tcan.lite"><img src="assets/img/badges/google-play.png" alt="Get it on Google Play" width="562" height="166"></a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== Адаптери ======== -->
+  <section class="block" id="adapters">
+    <div class="wrap">
+      <div class="kicker"><span class="en">Adapters</span><span class="uk">Адаптери</span></div>
+      <h2><span class="en">Tested adapters</span><span class="uk">Перевірені адаптери</span></h2>
+      <p class="lead"><span class="en">Any ELM327-compatible OBD-II adapter over Bluetooth, Bluetooth LE or Wi-Fi, plus CANserver and S3XY Commander. These are the ones we have checked ourselves.</span><span class="uk">Підходить будь-який ELM327-сумісний OBD-II адаптер через Bluetooth, Bluetooth LE чи Wi-Fi, а також CANserver і S3XY Commander. Ось ті, які ми перевірили самі.</span></p>
+      <div class="legend">
+        <span class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></span>
+        <span class="no">✕ <span class="en">not supported</span><span class="uk">не підтримується</span></span>
+      </div>
+      <div class="grid">
+        <article class="card product reveal">
+          <div class="photo"><img src="assets/img/adapters/elm327-mini.webp" alt="ELM327 mini" width="480" height="480" loading="lazy"></div>
+          <div class="body">
+            <h3>ELM327 mini</h3>
+            <div class="chips"><span class="chip">BLUETOOTH</span></div>
+            <dl class="status">
+              <div><dt>Android</dt><dd class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></dd></div>
+              <div><dt>iPhone</dt><dd class="no">✕ <span class="en">no classic Bluetooth on iPhone</span><span class="uk">на iPhone немає класичного Bluetooth</span></dd></div>
+              <div><dt><span class="en">0–100</span><span class="uk">0–100</span></dt><dd class="no">✕</dd></div>
+            </dl>
+            <p class="note"><span class="en">The cheapest option: fine for a connection check and basic readings, values update slower.</span><span class="uk">Найдешевший варіант: для перевірки звʼязку й базових показників, значення оновлюються повільніше.</span></p>
+          </div>
+        </article>
+        <article class="card product reveal">
+          <div class="photo"><img src="assets/img/adapters/konnwei-bt5.webp" alt="Konnwei ELM327 BT 5.0" width="480" height="480" loading="lazy"></div>
+          <div class="body">
+            <h3>Konnwei ELM327 BT 5.0</h3>
+            <div class="chips"><span class="chip">BLUETOOTH LE</span></div>
+            <dl class="status">
+              <div><dt>Android</dt><dd class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></dd></div>
+              <div><dt>iPhone</dt><dd class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></dd></div>
+              <div><dt>0–100</dt><dd class="no">✕</dd></div>
+            </dl>
+            <p class="note"><span class="en">Sold as "for Android and iOS".</span><span class="uk">Продається як «для Android та iOS».</span></p>
+          </div>
+        </article>
+        <article class="card product reveal">
+          <div class="photo"><img src="assets/img/adapters/nexpeak-nx103.webp" alt="NEXPEAK NX103" width="480" height="480" loading="lazy"></div>
+          <div class="body">
+            <h3>NEXPEAK NX103</h3>
+            <div class="chips"><span class="chip">WI-FI</span><span class="chip">ELM327 v1.5</span></div>
+            <dl class="status">
+              <div><dt>Android</dt><dd class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></dd></div>
+              <div><dt>iPhone</dt><dd class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></dd></div>
+              <div><dt>0–100</dt><dd class="no">✕</dd></div>
+            </dl>
+            <p class="note"><span class="en">Join the adapter's Wi-Fi first; meanwhile the phone's internet goes over mobile data.</span><span class="uk">Спершу підключіться до Wi-Fi адаптера; інтернет тим часом іде через мобільні дані.</span></p>
+          </div>
+        </article>
+        <article class="card product reveal">
+          <div class="photo"><img src="assets/img/adapters/vlinker-ms.webp" alt="Vgate vLinker MS" width="480" height="480" loading="lazy"></div>
+          <div class="body">
+            <h3>Vgate vLinker MS</h3>
+            <div class="chips"><span class="chip">BLUETOOTH</span><span class="chip">MFI</span><span class="chip stn">STN</span></div>
+            <dl class="status">
+              <div><dt>Android</dt><dd class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></dd></div>
+              <div><dt>iPhone</dt><dd class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></dd></div>
+              <div><dt>0–100</dt><dd class="ok">✓ Android</dd></div>
+            </dl>
+            <p class="note"><span class="en">Filters CAN messages in hardware, so values update noticeably more often.</span><span class="uk">Фільтрує CAN-повідомлення апаратно, тож значення оновлюються помітно частіше.</span></p>
+          </div>
+        </article>
+      </div>
+      <ul class="more">
+        <li class="card reveal"><b>OBDLink CX</b> — Bluetooth LE · STN · Android, iPhone · 0–100 <span class="ok">✓</span><br><span class="en">Supported, not tested by us yet.</span><span class="uk">Підтримується, ми ще не перевіряли.</span></li>
+        <li class="card reveal"><b>OBDLink MX+</b> — Bluetooth · STN · 0–100 <span class="ok">✓</span><br><span class="en">Android; on iPhone via MFi, awaiting approval.</span><span class="uk">Android; на iPhone через MFi — чекаємо дозволу.</span></li>
+        <li class="card reveal"><b>Vgate vLinker FS</b> — Bluetooth · MFi · 0–100 <span class="ok">✓</span><br><span class="en">Android; on iPhone via MFi, coming soon.</span><span class="uk">Android; на iPhone через MFi — незабаром.</span></li>
+        <li class="card reveal"><b>CANserver · S3XY Commander</b> — Wi-Fi · Android, iPhone · 0–100 <span class="ok">✓</span><br><span class="en">Supported, not tested by us yet.</span><span class="uk">Підтримуються, ми ще не перевіряли.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ======== Таймер розгону ======== -->
+  <section class="block" id="accel">
+    <div class="wrap">
+      <div class="kicker"><span class="en">Acceleration timer</span><span class="uk">Таймер розгону</span></div>
+      <h2><span class="en">When does the 0–100 timer appear?</span><span class="uk">Коли зʼявляється таймер 0–100?</span></h2>
+      <p class="lead"><span class="en">A widget on the Drive dashboard: it waits at a standstill (READY), starts timing as soon as the car moves and records 0–100 and 100–200 km/h (0–60 and 60–120 mph). Tap it for the history of your runs.</span><span class="uk">Віджет на дашборді «Привід»: чекає на стоянці (READY), починає замір, щойно авто рушило, і фіксує 0–100 та 100–200 км/год (0–60 і 60–120 mph). Тап по ньому — історія ваших заїздів.</span></p>
+      <div class="accel">
+        <div class="card reveal">
+          <h3><span class="en">What it looks like</span><span class="uk">Як це виглядає</span></h3>
+          <div class="accel-media">
+            <figure class="where">
+              <div class="phone">
+                <img class="en" src="assets/img/accel/drive-en.webp" alt="Drive dashboard with the acceleration timer and the STN chip highlighted" width="540" height="960" loading="lazy">
+                <img class="uk" src="assets/img/accel/drive-uk.webp" alt="Дашборд «Привід» з підсвіченими таймером розгону й чипом STN" width="540" height="960" loading="lazy">
+              </div>
+              <figcaption><span class="en">At the top of the Drive dashboard. STN next to the frame rate means the timer is available.</span><span class="uk">Угорі дашборда «Привід». STN поруч із частотою кадрів — таймер доступний.</span></figcaption>
+            </figure>
+            <div>
+              <figure class="shot">
+                <img class="en" src="assets/img/accel/en-running.webp" alt="Acceleration timer during a run" width="732" height="244" loading="lazy">
+                <img class="uk" src="assets/img/accel/uk-running.webp" alt="Таймер розгону під час заміру" width="732" height="244" loading="lazy">
+                <figcaption><span class="en">During a run: current time, 0–100 split, speed and g-force</span><span class="uk">Під час заміру: поточний час, відрізок 0–100, швидкість і перевантаження</span></figcaption>
+              </figure>
+              <figure class="shot">
+                <img class="en" src="assets/img/accel/en-done.webp" alt="Acceleration timer result" width="732" height="244" loading="lazy">
+                <img class="uk" src="assets/img/accel/uk-done.webp" alt="Результат таймера розгону" width="732" height="244" loading="lazy">
+                <figcaption><span class="en">Finish: 0–100 and 100–200 results</span><span class="uk">Фініш: результати 0–100 і 100–200</span></figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+        <div class="card reveal">
+          <h3><span class="en">It needs a continuous speed signal</span><span class="uk">Потрібна безперервна швидкість</span></h3>
+          <p><span class="en">The timer appears only when speed arrives continuously. Same rule on Android and iPhone.</span><span class="uk">Таймер зʼявляється лише тоді, коли швидкість надходить безперервно. Правило однакове для Android і iPhone.</span></p>
+          <ul>
+            <li class="yes"><span><b><span class="en">STN or compatible adapters</span><span class="uk">Адаптери на STN чи сумісному чипі</span></b> <span class="en">(OBDLink, vLinker) — hardware filtering.</span><span class="uk">(OBDLink, vLinker) — апаратна фільтрація.</span></span></li>
+            <li class="yes"><span><b>CANserver · S3XY Commander</b> <span class="en">— stream the whole bus over Wi-Fi.</span><span class="uk">— передають усю шину через Wi-Fi.</span></span></li>
+            <li class="nope"><span><b><span class="en">Basic ELM327 clones</span><span class="uk">Звичайні клони ELM327</span></b> <span class="en">— speed only ~3 times a second, too coarse to time a run.</span><span class="uk">— швидкість лише ~3 рази на секунду, для заміру замало.</span></span></li>
+          </ul>
+          <h3 class="sub-h"><span class="en">How to check your adapter</span><span class="uk">Як перевірити свій адаптер</span></h3>
+          <p><span class="en">After connecting, look for <b>STN</b> in the "Adapter connected" notification or next to the adapter in the adapter window.</span><span class="uk">Після підключення шукайте <b>STN</b> у сповіщенні «Адаптер підключено» або біля адаптера у вікні адаптера.</span></p>
+          <p class="note"><span class="en">iPhone has no classic Bluetooth: use Bluetooth LE, Wi-Fi, CANserver / S3XY or MFi adapters.</span><span class="uk">На iPhone немає класичного Bluetooth: підходять адаптери Bluetooth LE, Wi-Fi, CANserver / S3XY або MFi.</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== Кабелі ======== -->
+  <section class="block" id="cables">
+    <div class="wrap">
+      <div class="kicker"><span class="en">Cables</span><span class="uk">Кабелі</span></div>
+      <h2><span class="en">Which cable fits your Tesla</span><span class="uk">Який кабель потрібен вашій Tesla</span></h2>
+      <p class="lead"><span class="en">A Tesla's diagnostic connector is not a standard OBD-II socket, so the adapter needs a cable for your model. Tap a photo to enlarge it.</span><span class="uk">Діагностичний роз'єм Tesla — не стандартне гніздо OBD-II, тож адаптеру потрібен кабель саме для вашої моделі. Натисніть на фото, щоб збільшити його.</span></p>
+      <div class="grid cables">
+        <article class="card product reveal">
+          <a class="photo zoom" href="assets/img/cables/model-3-y-26pin.webp"><img src="assets/img/cables/model-3-y-26pin.webp" alt="OBD2 to 26-pin cable, male and female" width="960" height="960" loading="lazy"></a>
+          <div class="body">
+            <div class="pins">26<small>pin</small></div>
+            <h3>Model 3 / Y</h3>
+            <p class="note"><span class="en">Built in 2019 and later. Male + female: the cable goes in between the two halves of the car's connector.</span><span class="uk">Випущені з 2019 року. Тато + мама: кабель вмикається між двома половинками роз'єму авто.</span></p>
+          </div>
+        </article>
+        <article class="card product reveal">
+          <a class="photo zoom" href="assets/img/cables/model-s-x-12pin.webp"><img src="assets/img/cables/model-s-x-12pin.webp" alt="OBD2 to 12-pin cable" width="960" height="960" loading="lazy"></a>
+          <div class="body">
+            <div class="pins">12<small>pin</small></div>
+            <h3>Model S / X</h3>
+            <p class="note"><span class="en">Built up to and including September 2015.</span><span class="uk">Випущені до вересня 2015 включно.</span></p>
+          </div>
+        </article>
+        <article class="card product reveal">
+          <a class="photo zoom" href="assets/img/cables/model-s-x-20pin.webp"><img src="assets/img/cables/model-s-x-20pin.webp" alt="OBD2 to 20-pin cable" width="960" height="960" loading="lazy"></a>
+          <div class="body">
+            <div class="pins">20<small>pin</small></div>
+            <h3>Model S / X</h3>
+            <p class="note"><span class="en">Built after September 2015.</span><span class="uk">Випущені після вересня 2015.</span></p>
+          </div>
+        </article>
+      </div>
+      <p class="note" style="margin-top:16px"><span class="en">Model years are given as stated by the cable sellers. For Model 3 built before 2019 and refreshed Model S / X (2021+), check the connector in your car before ordering.</span><span class="uk">Роки вказано за даними продавців кабелів. Для Model 3, випущених до 2019 року, та оновлених Model S / X (2021+) перевірте роз'єм у своєму авто перед замовленням.</span></p>
+    </div>
+  </section>
+
+  <!-- ======== Приватність + підтримка ======== -->
+  <div class="wrap">
+    <section class="card privacy reveal">
+      <h2><span class="en">Everything stays on your phone</span><span class="uk">Усе лишається на вашому телефоні</span></h2>
+      <p><span class="en">No account, no server, no analytics. T-CAN talks to your adapter and nothing else.</span><span class="uk">Без акаунта, сервера й аналітики. T-CAN спілкується лише з вашим адаптером.</span></p>
+      <p><a href="privacy-policy/"><span class="en">Privacy Policy</span><span class="uk">Політика конфіденційності</span> →</a></p>
+    </section>
+
+    <section class="block" id="support">
+      <div class="card support reveal">
+        <div>
+          <div class="kicker"><span class="en">Support</span><span class="uk">Підтримка</span></div>
+          <p><span class="en">Questions, bug reports, requests for new car profiles. Please include your car model and year, adapter model and the app version from the About tab.</span><span class="uk">Питання, помилки, запити на нові профілі авто. Вкажіть модель і рік авто, модель адаптера та версію застосунку з вкладки «Про програму».</span></p>
+        </div>
+        <div class="contact">
+          <a class="mail" href="mailto:works.taras@gmail.com">works.taras@gmail.com</a>
+          <a class="tg" href="https://t.me/tcan_app?direct">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 11.4 20.6 4.3c.8-.3 1.5.2 1.2 1.4l-3 14.1c-.2 1-.8 1.2-1.6.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.7 8.6-7.8c.4-.3-.1-.5-.6-.2L7 13.8l-4.6-1.4c-1-.3-1-1 .6-1z"/></svg>
+            <span class="en">Message us on Telegram</span><span class="uk">Написати в Telegram</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <span>© 2026 T-CAN</span>
+      <a href="privacy-policy/"><span class="en">Privacy Policy</span><span class="uk">Політика конфіденційності</span></a>
+      <a href="mailto:works.taras@gmail.com">works.taras@gmail.com</a>
+    </div>
+    <nav class="social" aria-label="T-CAN social">
+      <a href="https://t.me/tcan_app" aria-label="Telegram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 11.4 20.6 4.3c.8-.3 1.5.2 1.2 1.4l-3 14.1c-.2 1-.8 1.2-1.6.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.7 8.6-7.8c.4-.3-.1-.5-.6-.2L7 13.8l-4.6-1.4c-1-.3-1-1 .6-1z"/></svg>Telegram</a>
+      <a href="https://www.youtube.com/@tcan_app" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M6.5 5.5h11a4 4 0 0 1 4 4v5a4 4 0 0 1-4 4h-11a4 4 0 0 1-4-4v-5a4 4 0 0 1 4-4zM10 8.8v6.4l5.4-3.2z"/></svg>YouTube</a>
+      <a href="https://www.instagram.com/tcan_app/" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg>Instagram</a>
+      <a href="https://www.tiktok.com/@tcan_app" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 3h3a4.5 4.5 0 0 0 4 4v3a7.5 7.5 0 0 1-4-1.2V15a6 6 0 1 1-6-6v3.2A2.8 2.8 0 1 0 14 15z"/></svg>TikTok</a>
+    </nav>
+    <p><span class="en">T-CAN is an independent project and is not affiliated with, endorsed by or connected to Tesla, Inc. "Tesla" is a trademark of Tesla, Inc. Displayed values are decoded from community-researched CAN definitions and are indicative only.</span><span class="uk">T-CAN — незалежний проєкт, не повʼязаний з Tesla, Inc. і не схвалений нею. «Tesla» — торговельна марка Tesla, Inc. Значення декодуються за дослідженнями спільноти й мають орієнтовний характер.</span></p>
+    <p><span class="en">Adapter and cable photos: manufacturers and sellers.</span><span class="uk">Фото адаптерів і кабелів: виробники та продавці.</span></p>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo" hidden>
+  <img alt="">
+  <button type="button" class="lb-close" aria-label="Close">✕</button>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    root.classList.add('js');
+    var KEY = 'tcan-site.lang';
+    function stored() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+    function apply(lang) {
+      root.setAttribute('data-lang', lang);
+      root.lang = lang;
+      document.querySelectorAll('.lang button').forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === lang));
+      });
+    }
+    var nav = (navigator.language || '').toLowerCase();
+    apply(stored() || (nav.indexOf('uk') === 0 ? 'uk' : 'en'));
+    document.querySelectorAll('.lang button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var lang = b.getAttribute('data-lang');
+        apply(lang);
+        try { localStorage.setItem(KEY, lang); } catch (e) {}
+      });
+    });
+    // Поява блоків при прокрутці; без IntersectionObserver — одразу видно все.
+    var items = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) { items.forEach(function (el) { el.classList.add('in'); }); return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    items.forEach(function (el) { io.observe(el); });
+  })();
+</script>
+<script>
+  // Перегляд фото кабелів поверх сторінки. «Назад» (браузер / телефон) закриває перегляд, а не йде зі сторінки;
+  // Ctrl/Cmd/Shift-клік і без JS — звичайне посилання на файл.
+  (function () {
+    var lb = document.getElementById('lightbox');
+    var img = lb.querySelector('img');
+    var pushed = false;
+    function show(src, alt) {
+      img.src = src;
+      img.alt = alt || '';
+      lb.hidden = false;
+      document.documentElement.classList.add('lb-lock');
+      requestAnimationFrame(function () { lb.classList.add('open'); });
+      try { history.pushState({ lightbox: true }, ''); pushed = true; } catch (e) { pushed = false; }
+    }
+    function hide() {
+      lb.classList.remove('open');
+      document.documentElement.classList.remove('lb-lock');
+      setTimeout(function () { if (!lb.classList.contains('open')) lb.hidden = true; }, 200);
+    }
+    function close() {
+      if (lb.hidden) return;
+      if (pushed) { pushed = false; history.back(); } else hide(); // history.back → popstate → hide
+    }
+    window.addEventListener('popstate', function () { pushed = false; if (!lb.hidden) hide(); });
+    lb.addEventListener('click', close);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    document.querySelectorAll('a.zoom').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        var im = a.querySelector('img');
+        show(a.getAttribute('href'), im && im.alt);
+      });
+    });
+  })();
+</script>
+<script>
+  // Галерея скриншотів: стрілки, затухання по краях, перетягування мишею (тач гортає нативно).
+  (function () {
+    var wrap = document.querySelector('.gallery-wrap');
+    if (!wrap) return;
+    var g = wrap.querySelector('.gallery');
+    var prev = wrap.querySelector('.gal-btn.prev');
+    var next = wrap.querySelector('.gal-btn.next');
+    var figs = g.querySelectorAll('figure');
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var behavior = reduce ? 'auto' : 'smooth';
+
+    function update() {
+      var max = g.scrollWidth - g.clientWidth;
+      var atStart = g.scrollLeft <= 2;
+      var atEnd = g.scrollLeft >= max - 2;
+      prev.disabled = atStart;
+      next.disabled = atEnd || max <= 2;
+      wrap.classList.toggle('fade-l', !atStart);
+      wrap.classList.toggle('fade-r', !atEnd && max > 2);
+    }
+    /** Позиція прокрутки, за якої фігура i стає першою зліва. */
+    function offsetOf(i) {
+      return g.scrollLeft + figs[i].getBoundingClientRect().left - g.getBoundingClientRect().left - 2;
+    }
+    function nearest() {
+      var best = 0;
+      var bestD = Infinity;
+      for (var i = 0; i < figs.length; i++) {
+        var d = Math.abs(offsetOf(i) - g.scrollLeft);
+        if (d < bestD) { bestD = d; best = i; }
+      }
+      return best;
+    }
+    function go(delta) {
+      var i = Math.max(0, Math.min(figs.length - 1, nearest() + delta));
+      g.scrollTo({ left: offsetOf(i), behavior: behavior });
+    }
+    prev.addEventListener('click', function () { go(-2); });
+    next.addEventListener('click', function () { go(2); });
+    g.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+
+    var down = false;
+    var moved = false;
+    var startX = 0;
+    var startLeft = 0;
+    g.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      down = true;
+      moved = false;
+      startX = e.clientX;
+      startLeft = g.scrollLeft;
+    });
+    g.addEventListener('pointermove', function (e) {
+      if (!down) return;
+      var dx = e.clientX - startX;
+      if (!moved && Math.abs(dx) < 4) return; // звичайний клік не стає перетягуванням
+      if (!moved) {
+        moved = true;
+        g.classList.add('dragging');
+        g.setPointerCapture(e.pointerId);
+      }
+      g.scrollLeft = startLeft - dx;
+    });
+    function end() {
+      if (!down) return;
+      down = false;
+      if (!moved) return;
+      // Без snap під час перетягування — тепер плавно доводимо до найближчого телефона й повертаємо snap
+      g.scrollTo({ left: offsetOf(nearest()), behavior: behavior });
+      setTimeout(function () { g.classList.remove('dragging'); }, reduce ? 0 : 380);
+    }
+    g.addEventListener('pointerup', end);
+    g.addEventListener('pointercancel', end);
+    // Після перетягування клік не повинен спрацювати (на випадок посилань усередині)
+    g.addEventListener('click', function (e) { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
+    g.addEventListener('dragstart', function (e) { e.preventDefault(); });
+  })();
+</script>
+</body>
+</html>
