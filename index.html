@@ -223,6 +223,29 @@
   .gallery .phone { position: static; transform: none; width: 100%; opacity: 1; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45); }
   .gallery figcaption { text-align: center; color: var(--muted); font-size: 14px; margin-top: 10px; }
 
+  /* Відео: обкладинка локальна; плеєр youtube-nocookie.com вантажиться лише після кліку — до того сторінка нічого не тягне з Google */
+  .videos { display: grid; grid-template-columns: 1.55fr 1fr; gap: 16px; align-items: start; }
+  .video { overflow: hidden; }
+  .yt { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; color: #fff; overflow: hidden; }
+  .yt:hover { text-decoration: none; }
+  .yt img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease, filter 0.3s ease; }
+  .yt:hover img { transform: scale(1.02); filter: brightness(1.1); }
+  .yt .play {
+    position: absolute; top: 50%; left: 50%; width: 72px; height: 72px; margin: -36px 0 0 -36px; border-radius: 50%;
+    display: grid; place-items: center; background: rgba(229, 32, 46, 0.92); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transition: transform 0.15s ease;
+  }
+  .yt:hover .play { transform: scale(1.08); }
+  .yt .play svg { width: 30px; height: 30px; margin-left: 4px; }
+  .yt .dur { position: absolute; right: 10px; bottom: 10px; padding: 2px 7px; border-radius: 6px; background: rgba(0, 0, 0, 0.78); font-size: 12.5px; font-weight: 700; }
+  .video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; background: #000; }
+  .video .body { padding: 16px 20px 18px; }
+  .video h3 { margin: 0 0 4px; font-size: 18px; letter-spacing: -0.01em; }
+  .video p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .videos + .note { margin-top: 14px; }
+  @media (max-width: 860px) { .videos { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .yt img, .yt .play { transition: none; } }
+
   /* Редакції */
   .editions { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .edition { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
@@ -375,6 +398,7 @@
     </a>
     <nav class="links">
       <a href="#features"><span class="en">Features</span><span class="uk">Можливості</span></a>
+      <a href="#video"><span class="en">Video</span><span class="uk">Відео</span></a>
       <a href="#editions"><span class="en">Editions</span><span class="uk">Версії</span></a>
       <a href="#adapters"><span class="en">Adapters</span><span class="uk">Адаптери</span></a>
       <a href="#cables"><span class="en">Cables</span><span class="uk">Кабелі</span></a>
@@ -513,6 +537,43 @@
         <button type="button" class="gal-btn prev" aria-label="Previous screenshots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6"/></svg></button>
         <button type="button" class="gal-btn next" aria-label="Next screenshots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"/></svg></button>
       </div>
+    </div>
+  </section>
+
+  <!-- ======== Відео ======== -->
+  <section class="block" id="video">
+    <div class="wrap">
+      <div class="kicker"><span class="en">Video</span><span class="uk">Відео</span></div>
+      <h2><span class="en">See it in action</span><span class="uk">Подивіться, як це працює</span></h2>
+      <p class="lead">
+        <span class="en">A five-minute tour of every dashboard on real data from two cars, and a quick walk through the settings.</span>
+        <span class="uk">Пʼятихвилинний огляд усіх дашбордів на реальних даних двох машин і коротко про налаштування. Відео англійською, з субтитрами.</span>
+      </p>
+      <div class="videos">
+        <article class="card video reveal">
+          <a class="yt" href="https://youtu.be/S_j7mC9Cb8c" data-yt="S_j7mC9Cb8c" aria-label="Play: T-CAN overview">
+            <img src="assets/img/video/overview.webp" alt="" width="1280" height="720" loading="lazy">
+            <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+            <span class="dur">4:52</span>
+          </a>
+          <div class="body">
+            <h3><span class="en">Overview</span><span class="uk">Огляд</span></h3>
+            <p><span class="en">Cells, a dead pack, battery health, the 0–100 timer, a full home charging session, HV and your own parameters.</span><span class="uk">Комірки, мертвий пак, здоровʼя батареї, таймер 0–100, повна домашня зарядка, HV і власні параметри.</span></p>
+          </div>
+        </article>
+        <article class="card video reveal">
+          <a class="yt" href="https://youtu.be/Zp92XJVSdnA" data-yt="Zp92XJVSdnA" aria-label="Play: T-CAN settings">
+            <img src="assets/img/video/settings.webp" alt="" width="1280" height="720" loading="lazy">
+            <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+            <span class="dur">1:20</span>
+          </a>
+          <div class="body">
+            <h3><span class="en">Settings</span><span class="uk">Налаштування</span></h3>
+            <p><span class="en">Language, units, theme, sizes, startup and snapshots, with a live dashboard reacting next to it.</span><span class="uk">Мова, одиниці, тема, розміри, запуск і знімки, а поруч живий дашборд, що реагує на зміни.</span></p>
+          </div>
+        </article>
+      </div>
+      <p class="note"><span class="en">The player loads from YouTube only after you press play.</span><span class="uk">Програвач завантажується з YouTube лише після натискання.</span></p>
     </div>
   </section>
 
@@ -787,6 +848,26 @@
       entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
     }, { rootMargin: '0px 0px -8% 0px' });
     items.forEach(function (el) { io.observe(el); });
+  })();
+</script>
+<script>
+  // Відео: до кліку — локальна обкладинка й звичайне посилання на YouTube (без JS теж працює);
+  // клік — плеєр youtube-nocookie.com з автозапуском, тож Google нічого не отримує, доки людина сама не захоче дивитись.
+  (function () {
+    document.querySelectorAll('a.yt[data-yt]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        var uk = document.documentElement.getAttribute('data-lang') === 'uk';
+        var f = document.createElement('iframe');
+        f.src = 'https://www.youtube-nocookie.com/embed/' + a.getAttribute('data-yt') + '?autoplay=1&rel=0' +
+          (uk ? '&hl=uk&cc_load_policy=1' : ''); // відео англійські: українцям одразу вмикаємо субтитри
+        f.title = a.getAttribute('aria-label') || 'YouTube video';
+        f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+        f.allowFullscreen = true;
+        a.replaceWith(f);
+      });
+    });
   })();
 </script>
 <script>
