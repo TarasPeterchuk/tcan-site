@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy Policy — T-CAN</title>
+<meta name="description" content="T-CAN and T-CAN Lite collect no data. Everything the app reads stays on your phone.">
+<meta name="theme-color" content="#06080c">
+<link rel="icon" type="image/png" href="../assets/img/icon-192.png">
+<link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #06080c;
+    --surface: rgba(22, 27, 34, 0.72);
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.14);
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --dim: #6e7781;
+    --green: #3fb950;
+    --blue: #58a6ff;
+    --brand: #e5202e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(800px 500px at 10% -10%, rgba(229, 32, 46, 0.14), transparent 60%),
+      radial-gradient(700px 500px at 95% 0%, rgba(88, 166, 255, 0.1), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
+    color: var(--text);
+    font: 16px/1.65 ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-left)); }
+
+  /* Мова: як на головній — html[data-lang], приховування з !important */
+  html:not([data-lang='uk']) .uk { display: none !important; }
+  html[data-lang='uk'] .en { display: none !important; }
+
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: saturate(160%) blur(16px); -webkit-backdrop-filter: saturate(160%) blur(16px);
+    background: rgba(6, 8, 12, 0.66); border-bottom: 1px solid var(--line);
+  }
+  .nav .wrap { display: flex; align-items: center; gap: 20px; height: 64px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); font-weight: 800; font-size: 19px; }
+  .brand:hover { text-decoration: none; }
+  .brand svg { width: 30px; height: 30px; }
+  .home { margin-left: auto; font-size: 14px; color: var(--muted); }
+  .home:hover { color: var(--text); text-decoration: none; }
+  .lang { display: inline-flex; padding: 3px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); }
+  .lang button {
+    font: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 5px 11px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer;
+  }
+  .lang button[aria-pressed='true'] { background: var(--text); color: var(--bg); }
+
+  article { max-width: 760px; margin: 0 auto; padding: 56px 0 24px; }
+  .kicker { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand); }
+  h1 { font-size: clamp(30px, 4.4vw, 46px); line-height: 1.1; letter-spacing: -0.03em; margin: 8px 0 10px; }
+  .date { color: var(--dim); font-size: 14px; margin: 0 0 26px; }
+  .summary {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 18px 20px; margin: 0 0 34px; border-radius: 16px;
+    border: 1px solid rgba(63, 185, 80, 0.3); background: linear-gradient(160deg, rgba(63, 185, 80, 0.12), var(--surface) 70%);
+  }
+  .summary svg { flex: none; width: 26px; height: 26px; color: var(--green); margin-top: 2px; }
+  .summary p { margin: 0; }
+  h2 { font-size: 22px; letter-spacing: -0.01em; margin: 34px 0 10px; }
+  p, li { color: #c4ccd5; }
+  b, strong { color: var(--text); }
+  ul { padding-left: 22px; margin: 10px 0; }
+  li { margin: 6px 0; }
+  code { font-size: 0.9em; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); }
+  .note { font-size: 14px; color: var(--dim); }
+
+  footer { margin-top: 48px; padding: 24px 0 calc(32px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); color: var(--dim); font-size: 13px; }
+  footer .row { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="../" aria-label="T-CAN">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M8 9.6 Q8 8.8 9 8.8 L22.5 8.8 L22.5 13.7 L10.4 13.7 Q9.6 13.7 9.6 13.0 Z" fill="var(--brand)" />
+        <path d="M25.5 8.8 L39 8.8 Q40 8.8 40 9.6 L38.4 13.0 Q38.4 13.7 37.6 13.7 L25.5 13.7 Z" fill="var(--brand)" />
+        <path d="M27 16 L18 29 H23 L21 40.5 L30 26.5 H25 L27 16 Z" fill="var(--brand)" />
+      </svg>
+      T-CAN
+    </a>
+    <a class="home" href="../">← <span class="en">Home</span><span class="uk">Головна</span></a>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang="uk" aria-pressed="false">УКР</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- ======== English ======== -->
+  <article class="en" lang="en">
+    <div class="kicker">T-CAN · T-CAN Lite</div>
+    <h1>Privacy Policy</h1>
+    <p class="date">Last updated: 2026-10-31</p>
+
+    <div class="summary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6z"/><path d="m8.8 12.2 2.3 2.3 4.4-4.6"/></svg>
+      <p><b>In short:</b> the app collects no data. It has no server, no account and no analytics, and everything it reads stays on your phone.</p>
+    </div>
+
+    <p>T-CAN and T-CAN Lite ("the app") are Android and iOS applications that read vehicle CAN-bus data from an OBD adapter (ELM327-compatible over Bluetooth or Wi-Fi, vLinker, OBDLink, CANserver / S3XY Commander) and display it on the phone. T-CAN Lite is available on Android only.</p>
+
+    <h2>Data we collect</h2>
+    <p><b>None.</b> The app has no backend server and no user accounts. It does not collect, transmit, sell or share any personal data, device identifiers, location data or vehicle data with the developer or any third party.</p>
+
+    <h2>Data stored on your device</h2>
+    <p>Everything the app works with stays on your phone:</p>
+    <ul>
+      <li><b>Vehicle data</b> read from the CAN bus, including the vehicle identification number (VIN) shown in snapshots, is displayed live and, if you enable the CAN logger (full version only), can be saved as a log file at your request (Downloads on Android, the app's folder in Files on iOS).</li>
+      <li><b>Dashboard snapshots</b> (full version only) are saved to Downloads (Android) or the app's folder in Files (iOS), or shared through the system share sheet, only when you tap the camera button.</li>
+      <li><b>Acceleration runs</b> (full version only): the history of your 0–100 / 100–200 runs is kept in the app's private storage.</li>
+      <li><b>Settings and preferences</b> (selected car profile, dashboard layout, theme, language, last adapter) are stored locally in the app's private storage.</li>
+    </ul>
+    <p>You can delete all of this by clearing the app's storage or uninstalling the app. Log files and snapshots are ordinary files you manage yourself.</p>
+
+    <h2>Permissions</h2>
+    <ul>
+      <li><b>Bluetooth</b> (Android: Nearby devices; iOS: Bluetooth): required to discover and connect to a Bluetooth OBD adapter. The app never uses Bluetooth to determine your location (<code>neverForLocation</code> on Android).</li>
+      <li><b>Location</b> (Android 11 and older only): older Android versions require this permission for Bluetooth scanning. The app does not read, store or transmit your location.</li>
+      <li><b>Local network</b> (iOS): required to connect to a Wi-Fi OBD adapter (ELM327 Wi-Fi, CANserver, S3XY Commander) on the adapter's own Wi-Fi network. The app only talks to the adapter address you choose.</li>
+      <li><b>Storage</b> (Android 10 and older only): to save log files and snapshots to Downloads at your request.</li>
+      <li><b>Internet / network state</b>: used only to open external links you tap (store page, source credits) and to talk to a Wi-Fi adapter on the local network (the app checks which network is Wi-Fi to send adapter traffic there). The app itself makes no requests to the internet.</li>
+    </ul>
+
+    <h2>Third-party services</h2>
+    <p>The app does not include analytics, advertising SDKs, crash reporting or any other third-party data-collecting service. Payment for the full version is handled entirely by Google Play or the Apple App Store under their own privacy policies.</p>
+
+    <h2>Children</h2>
+    <p>The app is not directed at children under 13 and does not knowingly collect any data from anyone.</p>
+
+    <h2>Changes</h2>
+    <p>If this policy changes, the updated version will be published at the same address with a new date.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy: <a href="mailto:works.taras@gmail.com">works.taras@gmail.com</a></p>
+  </article>
+
+  <!-- ======== Українська ======== -->
+  <article class="uk" lang="uk">
+    <div class="kicker">T-CAN · T-CAN Lite</div>
+    <h1>Політика конфіденційності</h1>
+    <p class="date">Оновлено: 2026-10-31</p>
+
+    <div class="summary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6z"/><path d="m8.8 12.2 2.3 2.3 4.4-4.6"/></svg>
+      <p><b>Коротко:</b> застосунок не збирає жодних даних. Без сервера, облікового запису й аналітики, а все, що він читає, лишається на вашому телефоні.</p>
+    </div>
+
+    <p>T-CAN і T-CAN Lite («застосунок») — застосунки для Android та iOS, які читають дані CAN-шини автомобіля через OBD-адаптер (сумісний з ELM327 через Bluetooth або Wi-Fi, vLinker, OBDLink, CANserver / S3XY Commander) і показують їх на телефоні. T-CAN Lite доступний лише на Android.</p>
+
+    <h2>Які дані ми збираємо</h2>
+    <p><b>Жодних.</b> Застосунок не має сервера й облікових записів. Він не збирає, не передає, не продає і нікому не надає персональні дані, ідентифікатори пристрою, дані про місцезнаходження чи дані автомобіля — ні розробнику, ні третім особам.</p>
+
+    <h2>Дані на вашому пристрої</h2>
+    <p>Усе, з чим працює застосунок, лишається на вашому телефоні:</p>
+    <ul>
+      <li><b>Дані автомобіля</b> з CAN-шини, зокрема ідентифікаційний номер (VIN), що показується на знімках, відображаються наживо і, якщо ви ввімкнете CAN-логер (лише повна версія), можуть бути збережені у файл за вашим запитом (Downloads на Android, папка застосунку у «Файлах» на iOS).</li>
+      <li><b>Знімки дашбордів</b> (лише повна версія) зберігаються в Downloads (Android) або в папку застосунку у «Файлах» (iOS) чи надсилаються через системне меню «Поділитися» — лише коли ви натискаєте кнопку камери.</li>
+      <li><b>Заміри розгону</b> (лише повна версія): історія ваших заїздів 0–100 / 100–200 зберігається в приватному сховищі застосунку.</li>
+      <li><b>Налаштування</b> (обраний профіль авто, вигляд дашбордів, тема, мова, останній адаптер) зберігаються локально в приватному сховищі застосунку.</li>
+    </ul>
+    <p>Усе це можна видалити, очистивши дані застосунку або видаливши його. Файли логів і знімки — звичайні файли, якими ви керуєте самі.</p>
+
+    <h2>Дозволи</h2>
+    <ul>
+      <li><b>Bluetooth</b> (Android: «Пристрої поблизу»; iOS: Bluetooth): потрібен, щоб знайти Bluetooth OBD-адаптер і підключитися до нього. Застосунок ніколи не використовує Bluetooth для визначення вашого місцезнаходження (<code>neverForLocation</code> на Android).</li>
+      <li><b>Місцезнаходження</b> (лише Android 11 і старші): старші версії Android вимагають цей дозвіл для пошуку Bluetooth-пристроїв. Застосунок не читає, не зберігає і не передає ваше місцезнаходження.</li>
+      <li><b>Локальна мережа</b> (iOS): потрібна, щоб підключитися до Wi-Fi OBD-адаптера (ELM327 Wi-Fi, CANserver, S3XY Commander) у власній Wi-Fi мережі адаптера. Застосунок звертається лише до адреси адаптера, яку ви обрали.</li>
+      <li><b>Памʼять</b> (лише Android 10 і старші): щоб за вашим запитом зберігати файли логів і знімки в Downloads.</li>
+      <li><b>Інтернет / стан мережі</b>: лише щоб відкривати зовнішні посилання, які ви натискаєте (сторінка в магазині, джерела), і обмінюватися даними з Wi-Fi адаптером у локальній мережі (застосунок перевіряє, яка мережа є Wi-Fi, щоб надсилати туди трафік адаптера). Сам застосунок не робить жодних запитів в інтернет.</li>
+    </ul>
+
+    <h2>Сторонні сервіси</h2>
+    <p>Застосунок не містить аналітики, рекламних SDK, звітів про збої чи інших сторонніх сервісів, що збирають дані. Оплату повної версії повністю обробляє Google Play або Apple App Store згідно з їхніми власними політиками конфіденційності.</p>
+
+    <h2>Діти</h2>
+    <p>Застосунок не призначений для дітей до 13 років і свідомо не збирає жодних даних ні від кого.</p>
+
+    <h2>Зміни</h2>
+    <p>Якщо політика зміниться, оновлену версію буде опубліковано за цією ж адресою з новою датою.</p>
+
+    <h2>Контакти</h2>
+    <p>Питання щодо цієї політики: <a href="mailto:works.taras@gmail.com">works.taras@gmail.com</a></p>
+    <p class="note">Це переклад. У разі розбіжностей переважає англійська версія.</p>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <span>© 2026 T-CAN</span>
+      <a href="../"><span class="en">Home</span><span class="uk">Головна</span></a>
+      <a href="mailto:works.taras@gmail.com">works.taras@gmail.com</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var KEY = 'tcan-site.lang';
+    function stored() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+    function apply(lang) {
+      root.setAttribute('data-lang', lang);
+      root.lang = lang;
+      document.querySelectorAll('.lang button').forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === lang));
+      });
+    }
+    var nav = (navigator.language || '').toLowerCase();
+    apply(stored() || (nav.indexOf('uk') === 0 ? 'uk' : 'en'));
+    document.querySelectorAll('.lang button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var lang = b.getAttribute('data-lang');
+        apply(lang);
+        try { localStorage.setItem(KEY, lang); } catch (e) {}
+      });
+    });
+  })();
+</script>
+</body>
+</html>
