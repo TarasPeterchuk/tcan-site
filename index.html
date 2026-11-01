@@ -309,9 +309,14 @@
     .chart-scroll img { width: 760px; max-width: none; }
     .swipe-hint { display: inline; }
   }
-  .cells-points { grid-template-columns: repeat(3, 1fr); margin-top: 26px; }
-  @media (max-width: 860px) { .cells-points { grid-template-columns: 1fr; } }
-  .dead-shot { margin-top: 16px; padding: 18px; }
+  /* Плитки «Паку» — знімки з апки з прозорими кутами, тож лягають на фон сайту як є */
+  .pack-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 30px; }
+  @media (max-width: 860px) { .pack-tiles { grid-template-columns: 1fr; max-width: 420px; } }
+  figure.tile-shot { margin: 0; }
+  .tile-shot img { display: block; width: 100%; height: auto; border-radius: 12px; box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45); }
+  .tile-shot figcaption { margin-top: 12px; font-size: 14px; color: var(--muted); }
+  .tile-shot figcaption b { color: var(--text); }
+  figure.dead-shot { margin-top: 30px; padding: 18px; } /* figure, бо figure.showcase { margin: 0 } інакше перебиває */
   .dead-shot .chart-scroll { box-shadow: none; border: 1px solid var(--line); border-radius: 12px; }
 
   /* Розгін: телефон боком (повний екран) + телефон стоячи */
@@ -580,23 +585,35 @@
           <img class="uk" src="assets/img/cells/uk-chart.webp" alt="Графік напруги комірок: 96 комірок, середня 4.066 В, дві слабші комірки видно одразу" width="1872" height="428" loading="lazy">
         </div>
         <figcaption>
-          <span class="en">The weaker a cell, the brighter its bar; the dashed line is the pack average. <span class="swipe-hint">Swipe to see all cells.</span></span>
-          <span class="uk">Що слабша комірка, то яскравіший її стовпець; пунктир — середня по батареї. <span class="swipe-hint">Гортайте вбік, щоб побачити всі комірки.</span></span>
+          <span class="en">The weaker a cell, the brighter its bar; the dashed line is the pack average. The lowest and highest cells are named and outlined in the cell grid under the chart. <span class="swipe-hint">Swipe to see all cells.</span></span>
+          <span class="uk">Що слабша комірка, то яскравіший її стовпець; пунктир — середня по батареї. Найнижчу й найвищу комірки названо за номером і обведено в сітці під графіком. <span class="swipe-hint">Гортайте вбік, щоб побачити всі комірки.</span></span>
         </figcaption>
       </figure>
-      <div class="points cells-points">
-        <article class="card point reveal">
-          <h3><span class="en">Min, max and imbalance</span><span class="uk">Мін, макс і розбаланс</span></h3>
-          <p><span class="en">The lowest and highest cells are named and outlined in the cell grid under the chart.</span><span class="uk">Найнижчу й найвищу комірки названо за номером і обведено в сітці під графіком.</span></p>
-        </article>
-        <article class="card point reveal">
-          <h3><span class="en">Balance check at rest</span><span class="uk">Перевірка балансу в спокої</span></h3>
-          <p><span class="en">The spread turns green, amber or red only when the car is at rest: under load it grows naturally and would raise false alarms.</span><span class="uk">Розкид фарбується в зелений, жовтий чи червоний лише в спокої: під навантаженням він природно зростає й давав би хибні тривоги.</span></p>
-        </article>
-        <article class="card point reveal">
-          <h3><span class="en">Chemistry recognised</span><span class="uk">Хімія розпізнається</span></h3>
-          <p><span class="en">LFP or NCA / NCM is detected from the bus, and the imbalance threshold follows it.</span><span class="uk">LFP чи NCA / NCM визначається з шини, і поріг розбалансу підлаштовується під неї.</span></p>
-        </article>
+      <div class="pack-tiles">
+        <figure class="tile-shot reveal">
+          <img class="en" src="assets/img/pack/en-soh.webp" alt="Battery health (SOH) tile: 96.0 %" width="900" height="300" loading="lazy">
+          <img class="uk" src="assets/img/pack/uk-soh.webp" alt="Плитка «Здоровʼя батареї (SOH)»: 96.0 %" width="900" height="300" loading="lazy">
+          <figcaption>
+            <span class="en"><b>Battery health.</b> SOH as the BMS estimates it: how much capacity is left compared with a new pack.</span>
+            <span class="uk"><b>Здоровʼя батареї.</b> SOH за оцінкою BMS: скільки ємності лишилось порівняно з новою батареєю.</span>
+          </figcaption>
+        </figure>
+        <figure class="tile-shot reveal">
+          <img class="en" src="assets/img/pack/en-full.webp" alt="Full pack tile: 77.8 kWh" width="900" height="300" loading="lazy">
+          <img class="uk" src="assets/img/pack/uk-full.webp" alt="Плитка «Повний пак»: 77.8 кВт·год" width="900" height="300" loading="lazy">
+          <figcaption>
+            <span class="en"><b>Real capacity.</b> How many kWh the fully charged pack holds today: the number owners watch to track degradation.</span>
+            <span class="uk"><b>Реальна ємність.</b> Скільки кВт·год вміщає повністю заряджена батарея зараз: саме за цим числом стежать за деградацією.</span>
+          </figcaption>
+        </figure>
+        <figure class="tile-shot reveal">
+          <img class="en" src="assets/img/pack/en-soc.webp" alt="SOC tile: 88.1 %, 67.3 kWh, buffer 3.0 kWh" width="900" height="300" loading="lazy">
+          <img class="uk" src="assets/img/pack/uk-soc.webp" alt="Плитка SOC: 88.1 %, 67.3 кВт·год, буфер 3.0 кВт·год" width="900" height="300" loading="lazy">
+          <figcaption>
+            <span class="en"><b>How full it is.</b> The charge level as the car shows it on screen, plus the kWh left and the hidden buffer.</span>
+            <span class="uk"><b>Наскільки заряджена.</b> Рівень заряду, як на екрані авто, а під ним — залишок у кВт·год і прихований буфер.</span>
+          </figcaption>
+        </figure>
       </div>
       <figure class="card showcase dead-shot reveal">
         <div class="chart-scroll" data-focus="0.46">
