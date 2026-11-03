@@ -242,8 +242,22 @@
   .video .body { padding: 16px 20px 18px; }
   .video h3 { margin: 0 0 4px; font-size: 18px; letter-spacing: -0.01em; }
   .video p { margin: 0; color: var(--muted); font-size: 14.5px; }
-  .videos + .note { margin-top: 14px; }
+  .videos + .note, .short + .note { margin-top: 14px; }
   @media (max-width: 860px) { .videos { grid-template-columns: 1fr; } }
+  /* Short (вертикальне відео): плеєр 9:16 ліворуч, опис фічі праворуч; на вузькому — одне під одним */
+  .video.short { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; align-items: center; margin-top: 16px; }
+  .short .yt, .short iframe { aspect-ratio: 9 / 16; }
+  .short .body { padding: 26px 30px; display: grid; gap: 12px; }
+  .short h3 { font-size: 24px; letter-spacing: -0.02em; }
+  .short p { font-size: 15.5px; }
+  .short ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; color: var(--muted); font-size: 15px; }
+  .short li::before { content: '✓'; color: var(--green); font-weight: 700; margin-right: 8px; }
+  .short .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand); }
+  @media (max-width: 640px) {
+    .video.short { grid-template-columns: 1fr; }
+    .short .yt, .short iframe { max-width: 320px; width: 100%; margin: 0 auto; }
+    .short .body { padding: 18px 20px 20px; }
+  }
   @media (prefers-reduced-motion: reduce) { .yt img, .yt .play { transition: none; } }
 
   /* Редакції */
@@ -680,8 +694,8 @@
       <div class="kicker"><span class="en">Video</span><span class="uk">Відео</span></div>
       <h2><span class="en">See it in action</span><span class="uk">Подивіться, як це працює</span></h2>
       <p class="lead">
-        <span class="en">A five-minute tour of every dashboard on real data from two cars, and a quick walk through the settings.</span>
-        <span class="uk">Пʼятихвилинний огляд усіх дашбордів на реальних даних двох машин і коротко про налаштування. Відео англійською, з субтитрами.</span>
+        <span class="en">A five-minute tour of every dashboard on real data from two cars, a quick walk through the settings, and the new engine sound.</span>
+        <span class="uk">Пʼятихвилинний огляд усіх дашбордів на реальних даних двох машин, коротко про налаштування і новий звук мотора. Відео англійською, з субтитрами.</span>
       </p>
       <div class="videos">
         <article class="card video reveal">
@@ -707,6 +721,24 @@
           </div>
         </article>
       </div>
+      <article class="card video short reveal">
+        <a class="yt" href="https://youtube.com/shorts/D7Fax47ZydQ" data-yt="D7Fax47ZydQ" aria-label="Play: T-CAN engine sound">
+          <img src="assets/img/video/engine.webp" alt="" width="540" height="960" loading="lazy">
+          <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+          <span class="dur">0:47</span>
+        </a>
+        <div class="body">
+          <span class="tag"><span class="en">New · full version</span><span class="uk">Новинка · повна версія</span></span>
+          <h3><span class="en">Engine sound</span><span class="uk">Звук мотора</span></h3>
+          <p><span class="en">Your real pedal and torque, turned into engine sound live, right in the Drive dashboard.</span><span class="uk">Справжня педаль і момент твого авто перетворюються на звук мотора наживо, прямо в дашборді «Привід».</span></p>
+          <ul>
+            <li><span class="en">10 engines, from a V8 to a jet turbine</span><span class="uk">10 моторів, від V8 до реактивної турбіни</span></li>
+            <li><span class="en">Virtual gearbox with shift lights</span><span class="uk">Віртуальна коробка з шифт-лайтами</span></li>
+            <li><span class="en">Pops &amp; bangs when you lift off</span><span class="uk">Постріли, коли скидаєш газ</span></li>
+            <li><span class="en">Full screen, through your car's speakers over Bluetooth</span><span class="uk">На весь екран, через динаміки авто по Bluetooth</span></li>
+          </ul>
+        </div>
+      </article>
       <p class="note"><span class="en">The player loads from YouTube only after you press play.</span><span class="uk">Програвач завантажується з YouTube лише після натискання.</span></p>
     </div>
   </section>
