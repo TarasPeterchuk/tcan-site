@@ -270,6 +270,7 @@
   .edition li::before { content: '✓'; color: var(--green); font-weight: 700; margin-right: 8px; }
   .edition .badges { margin-top: auto; }
   @media (max-width: 760px) { .editions { grid-template-columns: 1fr; } }
+  .editions.single { grid-template-columns: minmax(0, 640px); }
 
   /* Адаптери */
   .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -403,6 +404,8 @@
   }
   .tg:hover { text-decoration: none; transform: translateY(-2px); filter: brightness(1.08); }
   .tg svg { width: 18px; height: 18px; }
+  /* Telegram button in place of a store badge (Android is in testing): the same height as the store badges */
+  .tg-badge { height: 44px; box-sizing: border-box; padding: 0 18px; border-radius: 10px; font-size: 15px; }
   .social { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
   .social a {
     display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px; border-radius: 999px;
@@ -442,7 +445,7 @@
       <a href="#cells"><span class="en">Cells</span><span class="uk">Комірки</span></a>
       <a href="#accel">0–100</a>
       <a href="#video"><span class="en">Video</span><span class="uk">Відео</span></a>
-      <a href="#editions"><span class="en">Editions</span><span class="uk">Версії</span></a>
+      <a href="#editions"><span class="en">Get the app</span><span class="uk">Завантажити</span></a>
       <a href="#adapters"><span class="en">Adapters</span><span class="uk">Адаптери</span></a>
       <a href="#cables"><span class="en">Cables</span><span class="uk">Кабелі</span></a>
       <a href="#support"><span class="en">Support</span><span class="uk">Підтримка</span></a>
@@ -468,18 +471,18 @@
           <span class="en">Battery cells, pack health, motors, charging and HV state — live on your phone through an inexpensive OBD-II adapter. No account, no cloud.</span>
           <span class="uk">Комірки батареї, стан пака, мотори, зарядка й HV — наживо на телефоні через недорогий OBD-II адаптер. Без акаунта й без хмари.</span>
         </p>
-        <!-- Офіційні значки магазинів (Google Play / Apple) — без змін, лише обрізані прозорі поля -->
+        <!-- Офіційний значок App Store — без змін, лише обрізані прозорі поля. Android поки в закритому тестуванні
+             (Google Play ще не відкрив продакшн, 2026-11-17) → запис на тест через Telegram; T-CAN Lite прибрано. -->
         <div class="stores">
           <div class="store-group">
             <span class="group-label">Android</span>
             <div class="badges">
-              <a class="badge" href="https://play.google.com/store/apps/details?id=app.tcan">
-                <img src="assets/img/badges/google-play.png" alt="Get it on Google Play" width="562" height="166">
-                <span>T-CAN</span>
-              </a>
-              <a class="badge" href="https://play.google.com/store/apps/details?id=app.tcan.lite">
-                <img src="assets/img/badges/google-play.png" alt="Get it on Google Play" width="562" height="166">
-                <span><span class="en">T-CAN Lite · free</span><span class="uk">T-CAN Lite · безкоштовно</span></span>
+              <a class="badge" href="https://t.me/tcan_app?direct">
+                <span class="tg tg-badge">
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 11.4 20.6 4.3c.8-.3 1.5.2 1.2 1.4l-3 14.1c-.2 1-.8 1.2-1.6.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.7 8.6-7.8c.4-.3-.1-.5-.6-.2L7 13.8l-4.6-1.4c-1-.3-1-1 .6-1z"/></svg>
+                  <span class="en">Join the test</span><span class="uk">Долучитися до тесту</span>
+                </span>
+                <span><span class="en">In testing · message us</span><span class="uk">У тестуванні · напишіть нам</span></span>
               </a>
             </div>
           </div>
@@ -743,15 +746,15 @@
     </div>
   </section>
 
-  <!-- ======== Редакції ======== -->
+  <!-- ======== Застосунок (одна версія; T-CAN Lite прибрано 2026-11-17; id лишився «editions» для старих посилань) ======== -->
   <section class="block" id="editions">
     <div class="wrap">
-      <div class="kicker"><span class="en">Editions</span><span class="uk">Версії</span></div>
-      <h2><span class="en">Try free, then go full</span><span class="uk">Спробуйте безкоштовно, далі — повна</span></h2>
-      <p class="lead"><span class="en">Not sure your adapter works? Start with T-CAN Lite: it checks the connection and shows a few live readings.</span><span class="uk">Не впевнені, що адаптер підійде? Почніть з T-CAN Lite: він перевіряє зʼєднання й показує кілька параметрів наживо.</span></p>
-      <div class="editions">
+      <div class="kicker"><span class="en">The app</span><span class="uk">Застосунок</span></div>
+      <h2><span class="en">One app, everything included</span><span class="uk">Одна версія — усе включено</span></h2>
+      <p class="lead"><span class="en">One purchase, no subscription. Available on iPhone now; the Android version is in testing — message us on Telegram if you'd like to try it.</span><span class="uk">Одна покупка, без підписки. Уже є на iPhone; версія для Android зараз у тестуванні — напишіть нам у Telegram, якщо хочете спробувати.</span></p>
+      <div class="editions single">
         <article class="card edition full reveal">
-          <span class="tag"><span class="en">Full version</span><span class="uk">Повна версія</span></span>
+          <span class="tag"><span class="en">Everything included</span><span class="uk">Усе включено</span></span>
           <h3>T-CAN</h3>
           <ul>
             <li><span class="en">All dashboards: cells, pack, drive, charging, HV</span><span class="uk">Усі дашборди: комірки, пак, привід, зарядка, HV</span></li>
@@ -760,20 +763,11 @@
             <li><span class="en">CAN logger, raw frames, PNG / PDF snapshots</span><span class="uk">CAN-логер, сирі кадри, знімки PNG / PDF</span></li>
           </ul>
           <div class="badges">
-            <a class="badge" href="https://play.google.com/store/apps/details?id=app.tcan"><img src="assets/img/badges/google-play.png" alt="Get it on Google Play" width="562" height="166"></a>
             <a class="badge" href="https://apps.apple.com/app/id6827252478"><img src="assets/img/badges/app-store.svg" alt="Download on the App Store" width="120" height="40"></a>
-          </div>
-        </article>
-        <article class="card edition reveal">
-          <span class="tag"><span class="en">Free</span><span class="uk">Безкоштовно</span></span>
-          <h3>T-CAN Lite</h3>
-          <ul>
-            <li><span class="en">Adapter status, protocol and frame rate</span><span class="uk">Стан адаптера, протокол і частота кадрів</span></li>
-            <li><span class="en">Live basics: state of charge, pack voltage and current, speed</span><span class="uk">Базове наживо: рівень заряду, напруга й струм пака, швидкість</span></li>
-            <li><span class="en">Two live signals from each dashboard (except cells)</span><span class="uk">По два живі сигнали з кожного дашборда (крім комірок)</span></li>
-          </ul>
-          <div class="badges">
-            <a class="badge" href="https://play.google.com/store/apps/details?id=app.tcan.lite"><img src="assets/img/badges/google-play.png" alt="Get it on Google Play" width="562" height="166"></a>
+            <a class="tg tg-badge" href="https://t.me/tcan_app?direct">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 11.4 20.6 4.3c.8-.3 1.5.2 1.2 1.4l-3 14.1c-.2 1-.8 1.2-1.6.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.7 8.6-7.8c.4-.3-.1-.5-.6-.2L7 13.8l-4.6-1.4c-1-.3-1-1 .6-1z"/></svg>
+              <span class="en">Android · join the test</span><span class="uk">Android · долучитися до тесту</span>
+            </a>
           </div>
         </article>
       </div>
