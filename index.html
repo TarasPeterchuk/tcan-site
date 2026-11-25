@@ -276,6 +276,13 @@
   .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
   @media (max-width: 1040px) { .grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+  /* Адаптерів пʼять: в один ряд на широкому екрані, далі 3 → 2 → 1 */
+  .grid.five { grid-template-columns: repeat(5, 1fr); }
+  .grid.five .product .body { padding: 16px; }
+  .grid.five .status div { grid-template-columns: 62px 1fr; }
+  @media (max-width: 1100px) { .grid.five { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 760px) { .grid.five { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .grid.five { grid-template-columns: 1fr; } }
   /* Телефон: фото адаптерів нижчі (товар цілий), кабелі лишаються квадратними — текст на фото має читатись */
   @media (max-width: 520px) { .grid:not(.cables) .photo img { aspect-ratio: 16 / 10; } }
   .product { overflow: hidden; display: flex; flex-direction: column; }
@@ -784,7 +791,7 @@
         <span class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></span>
         <span class="no">✕ <span class="en">not supported</span><span class="uk">не підтримується</span></span>
       </div>
-      <div class="grid">
+      <div class="grid five">
         <article class="card product reveal">
           <div class="photo"><img src="assets/img/adapters/elm327-mini.webp" alt="ELM327 mini" width="480" height="480" loading="lazy"></div>
           <div class="body">
@@ -798,15 +805,27 @@
           </div>
         </article>
         <article class="card product reveal">
-          <div class="photo"><img src="assets/img/adapters/konnwei-bt5.webp" alt="Konnwei ELM327 BT 5.0" width="480" height="480" loading="lazy"></div>
+          <div class="photo"><img src="assets/img/adapters/konnwei-kw901.webp" alt="Konnwei KW901" width="480" height="480" loading="lazy"></div>
           <div class="body">
-            <h3>Konnwei ELM327 BT 5.0</h3>
-            <div class="chips"><span class="chip">BLUETOOTH LE</span></div>
+            <h3>Konnwei KW901</h3>
+            <div class="chips"><span class="chip">BLUETOOTH LE</span><span class="chip">ELM327 v1.5</span></div>
             <dl class="status">
               <div><dt>Android</dt><dd class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></dd></div>
               <div><dt>iPhone</dt><dd class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></dd></div>
             </dl>
             <p class="note"><span class="en">Sold as "for Android and iOS".</span><span class="uk">Продається як «для Android та iOS».</span></p>
+          </div>
+        </article>
+        <article class="card product reveal">
+          <div class="photo"><img src="assets/img/adapters/konnwei-kw906.webp" alt="Konnwei KW906" width="480" height="480" loading="lazy"></div>
+          <div class="body">
+            <h3>Konnwei KW906</h3>
+            <div class="chips"><span class="chip">BLUETOOTH</span><span class="chip">BLUETOOTH LE</span><span class="chip">ELM327 v1.5</span></div>
+            <dl class="status">
+              <div><dt>Android</dt><dd class="ok">✓ <span class="en">tested</span><span class="uk">перевірено</span></dd></div>
+              <div><dt>iPhone</dt><dd class="soon"><span class="en">via Bluetooth LE, not tested by us yet</span><span class="uk">через Bluetooth LE, ми ще не перевіряли</span></dd></div>
+            </dl>
+            <p class="note"><span class="en">Dual mode: it shows up twice in the adapter list, as Bluetooth and as Bluetooth LE, and both work.</span><span class="uk">Подвійний режим: у списку адаптерів він є двічі, як Bluetooth і як Bluetooth LE, і працюють обидва.</span></p>
           </div>
         </article>
         <article class="card product reveal">
